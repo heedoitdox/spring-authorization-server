@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.2'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    group = 'com.server'
+    version = '0.0.1-SNAPSHOT'
+
+    sourceCompatibility = 17
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'org.springframework.security:spring-security-oauth2-authorization-server:1.2.1'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        // h2 -> postgresql로 변경 후 제거
+        runtimeOnly 'com.h2database:h2'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.security:spring-security-test'
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+project(':authorization-server') {
+}
+
+project(':resource-server') {
+}

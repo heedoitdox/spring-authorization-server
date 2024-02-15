@@ -1,0 +1,3 @@
+rootProject.name = 'authorization'
+include 'authorization-server'
+include 'resource-server'
