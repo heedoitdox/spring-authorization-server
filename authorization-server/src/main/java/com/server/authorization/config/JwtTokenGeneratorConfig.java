@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -107,12 +108,14 @@ public class JwtTokenGeneratorConfig {
   public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(UserDetailsService userDetailsService) {
     return (context) -> {
       if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
-        JwtClaimsSet.Builder claimsBuilder = context.getClaims();
-        System.out.println(context.getPrincipal().getName());
-        UserDetails userDetails = userDetailsService.loadUserByUsername("user");
-        claimsBuilder.claims(claims -> {
-          claims.put("userDetails", userDetails);
-        });
+        if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.CLIENT_CREDENTIALS)) {
+          JwtClaimsSet.Builder claimsBuilder = context.getClaims();
+          System.out.println(context.getPrincipal().getName());
+          UserDetails userDetails = userDetailsService.loadUserByUsername("user");
+          claimsBuilder.claims(claims -> {
+            claims.put("userDetails", userDetails);
+          });
+        }
       }
     };
   }
