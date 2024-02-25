@@ -15,7 +15,9 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 @RequiredArgsConstructor
 public class CustomJwtAuthenticationProvider implements AuthenticationProvider {
     private final JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
