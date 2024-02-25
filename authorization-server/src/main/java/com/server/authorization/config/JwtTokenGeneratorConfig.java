@@ -18,20 +18,25 @@ import java.util.UUID;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.token.DelegatingOAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.JwtGenerator;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 public class JwtTokenGeneratorConfig {
@@ -57,10 +62,13 @@ public class JwtTokenGeneratorConfig {
 
   @Bean
   public JWKSource<SecurityContext> jwkSource() throws Exception {
-    String publicKeyStr = "";
-    String privateKeyStr = "";
-    RSAPublicKey publicKey = (RSAPublicKey) getPublicKeyFromString(publicKeyStr);
-    RSAPrivateKey privateKey = (RSAPrivateKey) getPrivateKeyFromString(privateKeyStr);
+//    String publicKeyStr = "";
+//    String privateKeyStr = "";
+//    RSAPublicKey publicKey = (RSAPublicKey) getPublicKeyFromString(publicKeyStr);
+//    RSAPrivateKey privateKey = (RSAPrivateKey) getPrivateKeyFromString(privateKeyStr);
+    KeyPair keyPair = generateRsaKey();
+    RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+    RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
     RSAKey rsaKey = new RSAKey.Builder(publicKey)
         .privateKey(privateKey)
         .keyID(UUID.randomUUID().toString())
@@ -107,5 +115,23 @@ public class JwtTokenGeneratorConfig {
         });
       }
     };
+  }
+
+  @Bean
+  public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+    return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+  }
+
+  @Bean
+  public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+    return new NimbusJwtEncoder(jwkSource);
+  }
+
+  @Bean
+  public AuthenticationProvider customJwtAuthenticationProvider(
+          JwtDecoder jwtDecoder,
+          UserDetailsService userDetailsService
+  ) {
+    return new CustomJwtAuthenticationProvider(jwtDecoder, userDetailsService);
   }
 }

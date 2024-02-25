@@ -1,9 +1,9 @@
 package com.server.authorization.config;
 
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
 import java.time.Duration;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -13,9 +13,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -28,17 +25,23 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@RequiredArgsConstructor
 public class AuthorizationServerConfig {
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
   public SecurityFilterChain authorizationServerSecurityFilterChain(
       HttpSecurity http,
-      OAuth2TokenGenerator<OAuth2Token> jwtTokenGenerator
+      OAuth2TokenGenerator<OAuth2Token> jwtTokenGenerator,
+      CustomJwtAuthenticationProvider customJwtAuthenticationProvider
   ) throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-        .tokenGenerator(jwtTokenGenerator);
+        .tokenGenerator(jwtTokenGenerator)
+        .tokenEndpoint(tokenEndpoint ->
+                tokenEndpoint
+                        .authenticationProvider(customJwtAuthenticationProvider)
+                        .accessTokenResponseHandler(new CustomAuthenticationSuccessHandler()));
 
 //    http
 //        // Accept access tokens for User Info and/or Client Registration
@@ -67,16 +70,6 @@ public class AuthorizationServerConfig {
         .build();
 
     return new InMemoryRegisteredClientRepository(registeredClient);
-  }
-
-  @Bean
-  public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-    return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
-  }
-
-  @Bean
-  public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
-    return new NimbusJwtEncoder(jwkSource);
   }
 
   @Bean
