@@ -46,18 +46,18 @@ public class AuthorizationServerConfig {
       UserDetailsService userDetailsService
   ) throws Exception {
     CustomCodeGrantAuthenticationProvider customGrant = new CustomCodeGrantAuthenticationProvider(
-        new InMemoryOAuth2AuthorizationService(),
+        new CustomOAuth2AuthorizationService(new InMemoryOAuth2AuthorizationService()),
         jwtTokenGenerator,
         userDetailsService,
         passwordEncoder());
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-        .tokenGenerator(jwtTokenGenerator)
         .tokenEndpoint(tokenEndpoint ->
                 tokenEndpoint
                         .accessTokenRequestConverter(new CustomCodeGrantAuthenticationConverter())
                         .authenticationProvider(customJwtAuthenticationProvider)
-                        .authenticationProvider(customGrant));
+                        .authenticationProvider(customGrant))
+        .tokenGenerator(jwtTokenGenerator);
 
 //    http
 //        // Accept access tokens for User Info and/or Client Registration

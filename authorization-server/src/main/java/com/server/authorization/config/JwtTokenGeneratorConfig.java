@@ -125,6 +125,7 @@ public class JwtTokenGeneratorConfig {
           claimsBuilder.claims(claims -> {
             claims.put("userDetails", userDetails);
           });
+          // accountService 관련은 여기가 나으려나?
         }
       }
     };
