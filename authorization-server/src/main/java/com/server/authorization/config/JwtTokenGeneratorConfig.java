@@ -34,6 +34,8 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.token.DelegatingOAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.JwtGenerator;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2AccessTokenGenerator;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2RefreshTokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -58,7 +60,8 @@ public class JwtTokenGeneratorConfig {
     JwtEncoder jwtEncoder = new NimbusJwtEncoder(jwkSource());
     JwtGenerator jwtGenerator = new JwtGenerator(jwtEncoder);
     jwtGenerator.setJwtCustomizer(jwtTokenCustomizer(users()));
-    return new DelegatingOAuth2TokenGenerator(jwtGenerator);
+    JwtRefreshTokenGenerator refreshTokenGenerator = new JwtRefreshTokenGenerator(jwtEncoder);
+    return new DelegatingOAuth2TokenGenerator(jwtGenerator, refreshTokenGenerator);
   }
 
   @Bean
@@ -109,6 +112,13 @@ public class JwtTokenGeneratorConfig {
     return (context) -> {
       if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
         if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.CLIENT_CREDENTIALS)) {
+          JwtClaimsSet.Builder claimsBuilder = context.getClaims();
+          System.out.println(context.getPrincipal().getName());
+          UserDetails userDetails = userDetailsService.loadUserByUsername("user");
+          claimsBuilder.claims(claims -> {
+            claims.put("userDetails", userDetails);
+          });
+        } else if (context.getAuthorizationGrantType().equals(new AuthorizationGrantType("custom_password"))) {
           JwtClaimsSet.Builder claimsBuilder = context.getClaims();
           System.out.println(context.getPrincipal().getName());
           UserDetails userDetails = userDetailsService.loadUserByUsername("user");

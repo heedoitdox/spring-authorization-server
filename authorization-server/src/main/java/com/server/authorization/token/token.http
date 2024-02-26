@@ -12,6 +12,4 @@ Host: localhost:8081
 Authorization: Basic YXV0aG9yaXphdGlvbi1jbGllbnQ6YXV0aG9yaXphdGlvbi1jbGllbnQtc2VjcmV0
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password
-userId=user
-password=1234
+grant_type=custom_password&username=user&password=1234&scope=read
