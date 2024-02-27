@@ -1,0 +1,4 @@
+### grant_type = password
+POST http://localhost:8081/oauth2/token?grant_type=password&username=user&password=1234&client_id=clientid&client_secret=secret
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic Y2xpZW50aWQ6c2VjcmV0
