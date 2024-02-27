@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/authorization
-    username: root
-    password: 1234
+    url: jdbc:postgresql://localhost:5432/youngbin
+    username: zoo
+    password: zoo
 
   h2:
     console:

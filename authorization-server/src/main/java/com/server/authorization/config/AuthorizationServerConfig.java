@@ -84,8 +84,8 @@ public class AuthorizationServerConfig {
   public RegisteredClientRepository registeredClientRepository(JpaRegisteredClientRepository jpaRegisteredClientRepository) {
     // 클라이언트 정보를 등록하는 객체를 만든다.
 //    RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-//        .clientId("barogo-member-clientid")
-//        .clientSecret("{noop}barogo-member-secret")
+//        .clientId("clientid")
+//        .clientSecret("{noop}secret")
 //        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE) // password 방식으로 custom 이 필요함.
 //        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
 //        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
