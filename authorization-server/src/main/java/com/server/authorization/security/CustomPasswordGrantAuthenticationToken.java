@@ -1,4 +1,4 @@
-package com.server.authorization.config;
+package com.server.authorization.security;
 
 import java.util.Map;
 import java.util.Set;
@@ -10,14 +10,14 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 import org.springframework.util.StringUtils;
 
-public class CustomCodeGrantAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
+public class CustomPasswordGrantAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
 
 	private static final long serialVersionUID = 1L;
 	private final String username;
 	private final String password;
 	private final String scope;
 
-	protected CustomCodeGrantAuthenticationToken(
+	protected CustomPasswordGrantAuthenticationToken(
 			String granttype,
 			Authentication clientPrincipal, 
 			Map<String, Object> additionalParameters) {

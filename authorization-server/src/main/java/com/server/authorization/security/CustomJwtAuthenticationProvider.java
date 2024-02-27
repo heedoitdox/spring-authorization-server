@@ -1,4 +1,4 @@
-package com.server.authorization.config;
+package com.server.authorization.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

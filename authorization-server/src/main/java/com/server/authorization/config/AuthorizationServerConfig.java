@@ -1,25 +1,22 @@
 package com.server.authorization.config;
 
+import com.server.authorization.security.CustomJwtAuthenticationProvider;
+import com.server.authorization.security.CustomPasswordGrantAuthenticationConverter;
+import com.server.authorization.security.CustomPasswordGrantAuthenticationProvider;
 import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
-import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -29,12 +26,9 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@RequiredArgsConstructor
 public class AuthorizationServerConfig {
 
   @Bean
@@ -42,21 +36,16 @@ public class AuthorizationServerConfig {
   public SecurityFilterChain authorizationServerSecurityFilterChain(
       HttpSecurity http,
       OAuth2TokenGenerator<OAuth2Token> jwtTokenGenerator,
-      AuthenticationProvider customJwtAuthenticationProvider,
-      UserDetailsService userDetailsService
+      CustomJwtAuthenticationProvider customJwtAuthenticationProvider,
+      CustomPasswordGrantAuthenticationProvider customPasswordGrantAuthenticationProvider
   ) throws Exception {
-    CustomCodeGrantAuthenticationProvider customGrant = new CustomCodeGrantAuthenticationProvider(
-        new CustomOAuth2AuthorizationService(new InMemoryOAuth2AuthorizationService()),
-        jwtTokenGenerator,
-        userDetailsService,
-        passwordEncoder());
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
         .tokenEndpoint(tokenEndpoint ->
                 tokenEndpoint
-                        .accessTokenRequestConverter(new CustomCodeGrantAuthenticationConverter())
+                        .accessTokenRequestConverter(new CustomPasswordGrantAuthenticationConverter())
                         .authenticationProvider(customJwtAuthenticationProvider)
-                        .authenticationProvider(customGrant))
+                        .authenticationProvider(customPasswordGrantAuthenticationProvider))
         .tokenGenerator(jwtTokenGenerator);
 
 //    http
@@ -87,8 +76,8 @@ public class AuthorizationServerConfig {
             .build())
         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-        .authorizationGrantType(new AuthorizationGrantType("custom_password"))
         .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+        .authorizationGrantType(CustomAuthorizationGrantType.CUSTOM_PASSWORD)
         .scope("read")
         .build();
 

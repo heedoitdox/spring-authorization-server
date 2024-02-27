@@ -1,5 +1,6 @@
-package com.server.authorization.config;
+package com.server.authorization.security;
 
+import com.server.authorization.config.CustomAuthorizationGrantType;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,16 +12,18 @@ import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-public class CustomCodeGrantAuthenticationConverter implements AuthenticationConverter {
+public class CustomPasswordGrantAuthenticationConverter implements AuthenticationConverter {
 
 	@Nullable
 	@Override
 	public Authentication convert(HttpServletRequest request) {
-		
+
 		String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
-		if (!"custom_password".equals(grantType)) { 
+		String customPasswordGrantType = CustomAuthorizationGrantType.CUSTOM_PASSWORD.getValue();
+		if (!grantType.equals(customPasswordGrantType)) {
 			return null;
 		}
+
 		Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();
 		MultiValueMap<String, String> parameters = getParameters(request);
 		Map<String, Object> additionalParameters = new HashMap<>();
@@ -31,7 +34,8 @@ public class CustomCodeGrantAuthenticationConverter implements AuthenticationCon
 				additionalParameters.put(key, value.get(0));
 			}
 		});
-		return new CustomCodeGrantAuthenticationToken(grantType, clientPrincipal, additionalParameters);
+
+		return new CustomPasswordGrantAuthenticationToken(grantType, clientPrincipal, additionalParameters);
 	}
 
 	private static MultiValueMap<String, String> getParameters(HttpServletRequest request) {
