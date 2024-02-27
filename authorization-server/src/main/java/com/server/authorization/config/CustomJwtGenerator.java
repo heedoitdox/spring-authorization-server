@@ -1,18 +1,12 @@
 package com.server.authorization.config;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.UUID;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.jose.jws.JwsAlgorithm;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
@@ -28,12 +22,9 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
-@Component
 public class CustomJwtGenerator implements OAuth2TokenGenerator<Jwt> {
   private final JwtEncoder jwtEncoder;
   private OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer;
@@ -70,21 +61,10 @@ public class CustomJwtGenerator implements OAuth2TokenGenerator<Jwt> {
     Instant issuedAt = Instant.now();
     Instant expiresAt;
     JwsAlgorithm jwsAlgorithm = SignatureAlgorithm.RS256;
-    if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue())) {
-      // TODO Allow configuration for ID Token time-to-live
-      expiresAt = issuedAt.plus(30, ChronoUnit.MINUTES);
-      if (registeredClient.getTokenSettings().getIdTokenSignatureAlgorithm() != null) {
-        jwsAlgorithm = registeredClient.getTokenSettings().getIdTokenSignatureAlgorithm();
-      }
-    } else {
-      expiresAt = issuedAt.plus(registeredClient.getTokenSettings().getAccessTokenTimeToLive());
-    }
+    expiresAt = issuedAt.plus(registeredClient.getTokenSettings().getAccessTokenTimeToLive());
 
-    // @formatter:off
     JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder();
-    if (StringUtils.hasText(issuer)) {
-      claimsBuilder.issuer(issuer);
-    }
+
     claimsBuilder
         .subject(context.getPrincipal().getName())
             /* contains 시킬 resourceId 등록 그래야 인가됨 */
@@ -96,29 +76,6 @@ public class CustomJwtGenerator implements OAuth2TokenGenerator<Jwt> {
       claimsBuilder.notBefore(issuedAt);
       if (!CollectionUtils.isEmpty(context.getAuthorizedScopes())) {
         claimsBuilder.claim(OAuth2ParameterNames.SCOPE, context.getAuthorizedScopes());
-      }
-    } else if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue())) {
-      claimsBuilder.claim(IdTokenClaimNames.AZP, registeredClient.getClientId());
-      if (AuthorizationGrantType.AUTHORIZATION_CODE.equals(context.getAuthorizationGrantType())) {
-        OAuth2AuthorizationRequest authorizationRequest = context.getAuthorization().getAttribute(
-            OAuth2AuthorizationRequest.class.getName());
-        String nonce = (String) authorizationRequest.getAdditionalParameters().get(OidcParameterNames.NONCE);
-        if (StringUtils.hasText(nonce)) {
-          claimsBuilder.claim(IdTokenClaimNames.NONCE, nonce);
-        }
-        SessionInformation sessionInformation = context.get(SessionInformation.class);
-        if (sessionInformation != null) {
-          claimsBuilder.claim("sid", sessionInformation.getSessionId());
-          claimsBuilder.claim(IdTokenClaimNames.AUTH_TIME, sessionInformation.getLastRequest());
-        }
-      } else if (AuthorizationGrantType.REFRESH_TOKEN.equals(context.getAuthorizationGrantType())) {
-        OidcIdToken currentIdToken = context.getAuthorization().getToken(OidcIdToken.class).getToken();
-        if (currentIdToken.hasClaim("sid")) {
-          claimsBuilder.claim("sid", currentIdToken.getClaim("sid"));
-        }
-        if (currentIdToken.hasClaim(IdTokenClaimNames.AUTH_TIME)) {
-          claimsBuilder.claim(IdTokenClaimNames.AUTH_TIME, currentIdToken.<Date>getClaim(IdTokenClaimNames.AUTH_TIME));
-        }
       }
     }
     // @formatter:on
@@ -152,14 +109,16 @@ public class CustomJwtGenerator implements OAuth2TokenGenerator<Jwt> {
       this.jwtCustomizer.customize(jwtContext);
     }
 
-    /* custom header, claims 등록 */
-    JwsHeader jwsHeader = jwsHeaderBuilder.header("typ", "JWT").build();
-    JwtClaimsSet claims = claimsBuilder
-        .claim("custom-claims", "")
-        .build();
+    JwsHeader jwsHeader = jwsHeaderBuilder.build();
+    JwtClaimsSet claims = claimsBuilder.build();
 
     Jwt jwt = this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims));
 
     return jwt;
+  }
+
+  public void setJwtCustomizer(OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer) {
+    Assert.notNull(jwtCustomizer, "jwtCustomizer cannot be null");
+    this.jwtCustomizer = jwtCustomizer;
   }
 }
