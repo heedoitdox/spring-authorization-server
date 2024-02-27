@@ -4,3 +4,20 @@ Content-Type: application/x-www-form-urlencoded
 Authorization: Basic eWItY2xpZW50OnNlY3JldA==
 
 grant_type=client_credentials
+
+### grant_type = password
+POST http://localhost:8081/oauth2/token?grant_type=password&username=youngbin&password=1234&client_id=barogo-member-clientid&client_secret=barogo-member-secret&scope=openid
+Content-Type: application/x-www-form-urlencoded
+#Authorization: Basic YmFyb2dvLW1lbWJlci1jbGllbnRpZDpiYXJvZ28tbWVtYmVyLXNlY3JldA==
+
+### grant_type = password
+POST http://localhost:8081/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic Y2xpZW50OnNlY3JldA==
+
+grant_type=password
+username=user
+password=password
+client_id=client
+client_secret=secret
+accountType=WORKER
