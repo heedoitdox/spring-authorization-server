@@ -1,5 +1,6 @@
 package com.server.authorization.config;
 
+import com.server.authorization.security.CustomAuthorizationGrantType;
 import com.server.authorization.security.CustomJwtAuthenticationProvider;
 import com.server.authorization.security.CustomPasswordGrantAuthenticationConverter;
 import com.server.authorization.security.CustomPasswordGrantAuthenticationProvider;

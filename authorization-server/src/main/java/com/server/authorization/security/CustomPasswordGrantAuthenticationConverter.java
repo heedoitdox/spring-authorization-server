@@ -1,6 +1,5 @@
 package com.server.authorization.security;
 
-import com.server.authorization.config.CustomAuthorizationGrantType;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;

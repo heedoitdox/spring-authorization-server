@@ -1,4 +1,4 @@
-package com.server.authorization.config;
+package com.server.authorization.security;
 
 import java.time.Instant;
 import java.util.Map;
