@@ -1,9 +1,11 @@
 package com.server.authorization.config;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
@@ -83,7 +85,6 @@ public class CustomJwtGenerator implements OAuth2TokenGenerator<Jwt> {
     JwsHeader.Builder jwsHeaderBuilder = JwsHeader.with(jwsAlgorithm);;
 
     if (this.jwtCustomizer != null) {
-      // @formatter:off
       JwtEncodingContext.Builder jwtContextBuilder = JwtEncodingContext.with(jwsHeaderBuilder, claimsBuilder)
           .registeredClient(context.getRegisteredClient())
           .principal(context.getPrincipal())
@@ -97,13 +98,6 @@ public class CustomJwtGenerator implements OAuth2TokenGenerator<Jwt> {
       if (context.getAuthorizationGrant() != null) {
         jwtContextBuilder.authorizationGrant(context.getAuthorizationGrant());
       }
-      if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue())) {
-        SessionInformation sessionInformation = context.get(SessionInformation.class);
-        if (sessionInformation != null) {
-          jwtContextBuilder.put(SessionInformation.class, sessionInformation);
-        }
-      }
-      // @formatter:on
 
       JwtEncodingContext jwtContext = jwtContextBuilder.build();
       this.jwtCustomizer.customize(jwtContext);
@@ -111,6 +105,8 @@ public class CustomJwtGenerator implements OAuth2TokenGenerator<Jwt> {
 
     JwsHeader jwsHeader = jwsHeaderBuilder.build();
     JwtClaimsSet claims = claimsBuilder.build();
+
+//    claims.getClaims().put("scope", new ArrayList<>(registeredClient.getScopes()));
 
     Jwt jwt = this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims));
 

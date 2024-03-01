@@ -1,6 +1,8 @@
 package com.server.authorization.config;
 
-import com.server.authorization.repository.JpaRegisteredClientRepository;
+import java.util.Map;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,7 +21,6 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
@@ -28,44 +29,25 @@ import org.springframework.security.oauth2.server.authorization.context.Authoriz
 import org.springframework.security.oauth2.server.authorization.token.DefaultOAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
-import org.springframework.util.Assert;
+import org.springframework.stereotype.Component;
 
-public class CustomCodeGrantAuthenticationProvider implements AuthenticationProvider {
+@Component
+@RequiredArgsConstructor
+public class PasswordAuthenticationProvider implements AuthenticationProvider {
 
-  private static final String ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc6749#section-5.2";
-  private final JpaRegisteredClientRepository registeredClientRepository;
-  private final OAuth2AuthorizationService authorizationService;
   private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
   private final UserDetailsService userDetailsService;
   private final PasswordEncoder passwordEncoder;
-  private String username = new String();
-  private String password = new String();
-
-  public CustomCodeGrantAuthenticationProvider(
-      JpaRegisteredClientRepository registeredClientRepository,
-      OAuth2AuthorizationService authorizationService,
-      OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator,
-      UserDetailsService userDetailsService,
-      PasswordEncoder passwordEncoder
-  ) {
-    Assert.notNull(registeredClientRepository, "registeredClientRepository cannot be null");
-    Assert.notNull(authorizationService, "authorizationService cannot be null");
-    Assert.notNull(tokenGenerator, "tokenGenerator cannot be null");
-    this.registeredClientRepository = registeredClientRepository;
-    this.authorizationService = authorizationService;
-    this.tokenGenerator = tokenGenerator;
-    this.userDetailsService = userDetailsService;
-    this.passwordEncoder = passwordEncoder;
-  }
+  private static final String ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc6749#section-5.2";
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
-    CustomCodeGrantAuthenticationToken customCodeGrantAuthentication = (CustomCodeGrantAuthenticationToken) authentication;
+    PasswordAuthenticationToken customCodeGrantAuthentication = (PasswordAuthenticationToken) authentication;
     OAuth2ClientAuthenticationToken clientPrincipal = getAuthenticatedClientElseThrowInvalidClient(customCodeGrantAuthentication);
     RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
-    username = customCodeGrantAuthentication.getUsername();
-    password = customCodeGrantAuthentication.getPassword();
+    final String username = customCodeGrantAuthentication.getUsername();
+    final String password = customCodeGrantAuthentication.getPassword();
 
     User user = null;
     try {
@@ -79,6 +61,8 @@ public class CustomCodeGrantAuthenticationProvider implements AuthenticationProv
     if (!registeredClient.getAuthorizationGrantTypes().contains(customCodeGrantAuthentication.getGrantType())) {
       throw new OAuth2AuthenticationException(OAuth2ErrorCodes.UNAUTHORIZED_CLIENT);
     }
+
+    // TODO: 만약 계정정보를 업데이트 할 것이 있다면 여기서
 
     Authentication usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, null,
         user.getAuthorities());
@@ -129,12 +113,13 @@ public class CustomCodeGrantAuthenticationProvider implements AuthenticationProv
       authorizationBuilder.refreshToken(refreshToken);
     }
 
-    return new OAuth2AccessTokenAuthenticationToken(registeredClient, usernamePasswordAuthenticationToken, accessToken, refreshToken);
+    final Map<String, Object> scopes = Map.of("scope", registeredClient.getScopes().stream().collect(Collectors.joining(" ")));
+    return new OAuth2AccessTokenAuthenticationToken(registeredClient, usernamePasswordAuthenticationToken, accessToken, refreshToken, scopes);
   }
 
   @Override
   public boolean supports(Class<?> authentication) {
-    return CustomCodeGrantAuthenticationToken.class.isAssignableFrom(authentication);
+    return PasswordAuthenticationToken.class.isAssignableFrom(authentication);
   }
 
   private static OAuth2ClientAuthenticationToken getAuthenticatedClientElseThrowInvalidClient(

@@ -15,8 +15,6 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.time.Duration;
-import java.util.UUID;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,19 +25,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.DelegatingOAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2AccessTokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2RefreshTokenGenerator;
@@ -53,24 +48,19 @@ public class AuthorizationServerConfig {
   @Order(Ordered.HIGHEST_PRECEDENCE)
   public SecurityFilterChain authorizationServerSecurityFilterChain(
       HttpSecurity http,
-      JwtEncoder jwtEncoder,
       JpaRegisteredClientRepository registeredClientRepository,
-      MemberService memberService,
-      JwtCustomizer jwtCustomizer
+      CustomGrantAuthenticationConverter customCodeGrantAuthenticationConverter,
+      PasswordAuthenticationProvider passwordAuthenticationProvider,
+      CustomCredentialsAuthenticationProvider customCredentialsAuthenticationProvider
   ) throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
         .registeredClientRepository(registeredClientRepository)
         .tokenEndpoint(tokenEndpoint -> tokenEndpoint
-            .accessTokenRequestConverter(new CustomCodeGrantAuthenticationConverter())
-            .authenticationProvider(new CustomCodeGrantAuthenticationProvider(
-                registeredClientRepository,
-                oAuth2AuthorizationService(),
-                tokenGenerator(jwtEncoder, jwtCustomizer),
-                memberService,
-                passwordEncoder()))
-        );
+            .accessTokenRequestConverter(customCodeGrantAuthenticationConverter)
+            .authenticationProvider(passwordAuthenticationProvider)
+            .authenticationProvider(customCredentialsAuthenticationProvider));
 
     http
         // Accept access tokens for User Info and/or Client Registration
@@ -90,6 +80,7 @@ public class AuthorizationServerConfig {
 //        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
 //        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
 //        .authorizationGrantType(new AuthorizationGrantType("password"))
+//        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
 //        .redirectUri("http://127.0.0.1:8081")
 //        .scope("store")
 //        .scope("order")

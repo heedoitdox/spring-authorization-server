@@ -38,7 +38,7 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
   @Override
   public void save(RegisteredClient registeredClient) {
     Assert.notNull(registeredClient, "registeredClient cannot be null");
-//    this.clientRepository.save(toEntity(registeredClient));
+    this.clientRepository.save(toEntity(registeredClient));
   }
 
   @Override
@@ -119,7 +119,7 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
 
   private Map<String, Object> parseMap(String data) {
     try {
-      return this.objectMapper.readValue(data, new TypeReference<Map<String, Object>>() {
+      return this.objectMapper.readValue(data, new TypeReference<>() {
       });
     } catch (Exception ex) {
       throw new IllegalArgumentException(ex.getMessage(), ex);
