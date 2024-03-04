@@ -78,11 +78,24 @@ public class AuthorizationServerConfig {
         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
         .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-        .authorizationGrantType(CustomAuthorizationGrantType.CUSTOM_PASSWORD)
         .scope("read")
         .build();
 
-    return new InMemoryRegisteredClientRepository(registeredClient);
+    RegisteredClient registeredClient2 = RegisteredClient.withId(UUID.randomUUID().toString())
+        .clientId("authorization-client-2")
+        .clientSecret("{noop}authorization-client-secret-2")
+        .tokenSettings(TokenSettings.builder()
+            .accessTokenTimeToLive(Duration.ofSeconds(31560000))
+            .refreshTokenTimeToLive(Duration.ofSeconds(31560000))
+            .reuseRefreshTokens(true)
+            .build())
+        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+        .authorizationGrantType(CustomAuthorizationGrantType.CUSTOM_PASSWORD)
+        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+        .scope("read")
+        .build();
+
+    return new InMemoryRegisteredClientRepository(registeredClient, registeredClient2);
   }
 
   @Bean
