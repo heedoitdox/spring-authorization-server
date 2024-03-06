@@ -24,11 +24,13 @@ subprojects {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
 
-        // h2 -> postgresql로 변경 후 제거
-        runtimeOnly 'com.h2database:h2'
+
+        runtimeOnly 'org.postgresql:postgresql'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testImplementation 'org.springframework.security:spring-security-test'
+
+        testRuntimeOnly 'com.h2database:h2'
     }
 
     configurations {

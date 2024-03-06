@@ -3,16 +3,13 @@ server:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driverClassName: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:postgresql://localhost:12345/test
+    driverClassName: org.postgresql.Driver
+    username: master
+    password: pw
 
   jpa:
+    show-sql: true
     hibernate:
       ddl-auto: update
-    show-sql: true
+      format_sql: true
