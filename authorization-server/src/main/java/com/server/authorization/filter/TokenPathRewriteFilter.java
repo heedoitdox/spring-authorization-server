@@ -27,18 +27,14 @@ public class TokenPathRewriteFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         List<String> tokenPaths = List.of("/oauth3/token", "/test/token");
-        // 조건에 따라 경로 변경 로직 구현
         for (String path: tokenPaths) {
             if (requestURI.startsWith(path)) {
-                // 실제 서버에서 /a 경로의 처리를 /b 경로로 재작성하고자 할 때 로직 구현
                 String newRequestURI = requestURI.replace(path, tokenEndpoint);
-                // 요청을 새 경로로 전달
                 request.getRequestDispatcher(newRequestURI).forward(request, response);
                 return;
             }
         }
 
-        // 다른 경로에 대한 요청은 변경 없이 그대로 진행
         filterChain.doFilter(request, response);
     }
 }
