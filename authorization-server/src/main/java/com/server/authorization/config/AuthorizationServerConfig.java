@@ -7,6 +7,7 @@ import com.server.authorization.security.CustomPasswordGrantAuthenticationProvid
 import java.time.Duration;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -31,6 +32,9 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class AuthorizationServerConfig {
+
+  @Value("${oauth2.token.endpoint}")
+  private String tokenEndpoint;
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -100,7 +104,9 @@ public class AuthorizationServerConfig {
 
   @Bean
   public AuthorizationServerSettings authorizationServerSettings() {
-    return AuthorizationServerSettings.builder().build();
+    return AuthorizationServerSettings.builder()
+            .tokenEndpoint(tokenEndpoint)
+            .build();
   }
 
 }

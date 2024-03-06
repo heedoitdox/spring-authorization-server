@@ -16,3 +16,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+oauth2:
+  token:
+    endpoint: /oauth2/token
